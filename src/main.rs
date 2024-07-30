@@ -1,16 +1,37 @@
 use std::str::FromStr;
 use std::fs::File;
-use std::io::{self, Read};
+use std::io::Read;
 use std::fmt::{self};
 use std::num::ParseIntError;
 use std::convert::From;
 
 const FILE_PATH: &str = "D:\\Program\\to_do_list_rs\\data.txt";
-
+// todo：模块化该代码，并只暴露出TodoList结构, 使用crate尝试吧，先把整体的逻辑搭建起来
 enum TaskStatus {
     Pending,
     Processing,
     Completed,
+}
+
+impl From<&str> for TaskStatus {
+    fn from(value: &str) -> Self {
+        match value {
+            "0" => Self::Pending,
+            "1" => Self::Processing,
+            "2" => Self::Completed,
+            _ => Self::Pending,
+        }
+    }
+}
+
+impl From<TaskStatus> for &str {
+    fn from(value: TaskStatus) -> Self {
+        match value {
+            TaskStatus::Pending => "0",
+            TaskStatus::Completed => "1",
+            TaskStatus::Processing => "2",
+        }
+    }
 }
 
 impl fmt::Display for TaskStatus {
@@ -58,13 +79,7 @@ impl FromStr for Task {
             3 => {
                 let no: u32 = args[0].parse()?;
                 let desc = args[1].to_string();
-                let status: TaskStatus = match args[2] {
-                    "0" => TaskStatus::Pending,
-                    "1" => TaskStatus::Processing,
-                    "2" => TaskStatus::Completed,
-                    _ => Err(ParseTaskError(format!("task's status is error")))?,
-                };
-
+                let status: TaskStatus = args[2].into();
                 Ok(Self {
                     no,
                     desc,
@@ -98,6 +113,18 @@ impl ToDoList {
             task_list,
         }
     }
+
+    pub fn add_task(&mut self, desc: &str) -> Result<u32, ParseTaskError> {
+        let no = match self.task_list.last() {
+            Some(task) => task.no + 1,
+            None => 1u32,  
+        };
+        let s = format!("{},{},{}", no, desc, TaskStatus::Pending);
+        println!("{}", s);
+        let task = Task::from_str(&s)?;
+        self.task_list.push(task);
+        Ok(no)
+    }
 }
 
 impl fmt::Display for ToDoList {
@@ -110,8 +137,17 @@ impl fmt::Display for ToDoList {
     }
 }
 
+#[test]
+fn test_add_task() {
+    let mut app = ToDoList::initial_app(FILE_PATH);
+    let no = app.add_task("学习学习");
+    assert!(no.is_ok());
+}
+
 fn main() {
     let mut app = ToDoList::initial_app(FILE_PATH);
+    let no = app.add_task("学习学习");
+    println!("no: {}", no.unwrap());
     println!("{}", app);
     println!("Hello, world!");
 }
