@@ -114,7 +114,7 @@ impl ToDoList {
         }
     }
 
-    pub fn add_task(&mut self, desc: &str) -> Result<u32, ParseTaskError> {
+    fn add_task(&mut self, desc: &str) -> Result<u32, ParseTaskError> {
         let no = match self.task_list.last() {
             Some(task) => task.no + 1,
             None => 1u32,  
@@ -124,6 +124,17 @@ impl ToDoList {
         let task = Task::from_str(&s)?;
         self.task_list.push(task);
         Ok(no)
+    }
+
+    fn update_task_status(&mut self, no: u32, status: TaskStatus) -> bool {
+        let mut task = self.task_list.iter_mut().find(|task| task.no == no);
+        match task {
+            Some(task) => {
+                task.status = status;
+                true
+            },
+            None => false,
+        }
     }
 }
 
@@ -140,13 +151,22 @@ impl fmt::Display for ToDoList {
 #[test]
 fn test_add_task() {
     let mut app = ToDoList::initial_app(FILE_PATH);
-    let no = app.add_task("学习学习");
+    let no = app.add_task("test");
     assert!(no.is_ok());
+}
+
+#[test]
+fn test_update_task() {
+    let mut app = ToDoList::initial_app(FILE_PATH);
+    let no = app.add_task("test_update_task");
+    assert!(no.is_ok());
+    let res = app.update_task_status(no.unwrap(), TaskStatus::Processing);
+    assert!(res);
 }
 
 fn main() {
     let mut app = ToDoList::initial_app(FILE_PATH);
-    let no = app.add_task("学习学习");
+    let no = app.add_task("test");
     println!("no: {}", no.unwrap());
     println!("{}", app);
     println!("Hello, world!");
