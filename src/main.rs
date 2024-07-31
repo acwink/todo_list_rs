@@ -136,6 +136,10 @@ impl ToDoList {
             None => false,
         }
     }
+
+    fn show_task_list(&self) {
+        println!("{}", self);
+    }
 }
 
 impl fmt::Display for ToDoList {
@@ -163,7 +167,11 @@ fn test_update_task() {
     let res = app.update_task_status(no.unwrap(), TaskStatus::Processing);
     assert!(res);
 }
-
+#[test]
+fn test_show_task_list() {
+    let app = ToDoList::initial_app(FILE_PATH);
+    app.show_task_list();
+}
 fn main() {
     let mut app = ToDoList::initial_app(FILE_PATH);
     let no = app.add_task("test");
