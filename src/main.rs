@@ -137,6 +137,16 @@ impl ToDoList {
         }
     }
 
+    fn delete_task(&mut self, no: u32) -> bool {
+        let res = self.task_list.iter().enumerate().find(|(index, task)| task.no == no);
+        if let Some((index, _)) = res {
+            self.task_list.remove(index);
+            true
+        } else {
+            false
+        }
+    }
+
     fn show_task_list(&self) {
         println!("{}", self);
     }
@@ -172,6 +182,15 @@ fn test_show_task_list() {
     let app = ToDoList::initial_app(FILE_PATH);
     app.show_task_list();
 }
+
+#[test]
+fn test_delete_task() {
+    let mut app = ToDoList::initial_app(FILE_PATH);
+    let no = app.add_task("test delete");
+    assert!(no.is_ok());
+    assert!(app.delete_task(no.unwrap()));
+}
+
 fn main() {
     let mut app = ToDoList::initial_app(FILE_PATH);
     let no = app.add_task("test");
