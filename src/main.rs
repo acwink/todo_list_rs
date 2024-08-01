@@ -1,13 +1,13 @@
 use std::path::Path;
 use std::str::FromStr;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Take, Write};
 use std::fmt::{self};
 use std::num::ParseIntError;
 use std::convert::From;
-use tempfile::NamedTempFile;
+use std::io;
 
-const FILE_PATH: &str = "D:\\Program\\to_do_list_rs\\data.txt";
+const FILE_PATH: &str = "data.txt";
 // todo：模块化该代码，并只暴露出TodoList结构, 使用crate尝试吧，先把整体的逻辑搭建起来
 enum TaskStatus {
     Pending,
@@ -149,6 +149,10 @@ impl ToDoList {
         }
     }
 
+    fn find_task_by_desc(&self, desc: &str) -> Option<&Task> {
+        self.task_list.iter().find(|task| task.desc.eq(desc))
+    }
+
     fn show_task_list(&self) {
         println!("{}", self);
     }
@@ -163,48 +167,94 @@ impl fmt::Display for ToDoList {
         write!(f, "")
     }
 }
+// todo：开一个线程定时去保存数据
+impl Drop for ToDoList {
+    fn drop(&mut self) {
+        println!("drop todoList");
+        match File::create(FILE_PATH) {
+            Ok(mut f) => {
+                for ele in &self.task_list {
+                    let _ = writeln!(f, "{},{},{}", ele.no, ele.desc, ele.status); 
+                }
+            },
+            Err(_) => {
+                println!("save failed");
+            }
+        }
 
-#[test]
-fn test_add_task() {
-    let temp_file = NamedTempFile::new().unwrap();
-    let file_path = temp_file.path();
-    let mut app = ToDoList::initial_app(file_path);
-    let no = app.add_task("test");
-    assert!(no.is_ok());
+    }
 }
 
-#[test]
-fn test_update_task() {
-    let temp_file = NamedTempFile::new().unwrap();
-    let file_path = temp_file.path();
-    let mut app = ToDoList::initial_app(file_path);
-    let no = app.add_task("test_update_task");
-    assert!(no.is_ok());
-    let res = app.update_task_status(no.unwrap(), TaskStatus::Processing);
-    assert!(res);
-}
-#[test]
-fn test_show_task_list() {
-    let temp_file = NamedTempFile::new().unwrap();
-    let file_path = temp_file.path();
-    let app = ToDoList::initial_app(file_path);
-    app.show_task_list();
-}
+#[cfg(test)]
+mod test_app {
+    use crate::{ToDoList, TaskStatus};
+    use tempfile::NamedTempFile;
 
-#[test]
-fn test_delete_task() {
-    let temp_file = NamedTempFile::new().unwrap();
-    let file_path = temp_file.path();
-    let mut app = ToDoList::initial_app(file_path);
-    let no = app.add_task("test delete");
-    assert!(no.is_ok());
-    assert!(app.delete_task(no.unwrap()));
+    #[test]
+    fn test_add_task() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let file_path = temp_file.path();
+        let mut app = ToDoList::initial_app(file_path);
+        let no = app.add_task("test");
+        assert!(no.is_ok());
+    }
+    
+    #[test]
+    fn test_update_task() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let file_path = temp_file.path();
+        let mut app = ToDoList::initial_app(file_path);
+        let no = app.add_task("test_update_task");
+        assert!(no.is_ok());
+        let res = app.update_task_status(no.unwrap(), TaskStatus::Processing);
+        assert!(res);
+    }
+
+    #[test]
+    fn test_show_task_list() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let file_path = temp_file.path();
+        let app = ToDoList::initial_app(file_path);
+        app.show_task_list();
+    }
+
+    #[test]
+    fn test_delete_task() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let file_path = temp_file.path();
+        let mut app = ToDoList::initial_app(file_path);
+        let no = app.add_task("test delete");
+        assert!(no.is_ok());
+        assert!(app.delete_task(no.unwrap()));
+    }
+
+    // 这个测试用例有问题，待修改
+    #[test]
+    fn test_save_data() {
+        let temp_file = NamedTempFile::new().unwrap();
+        let file_path = temp_file.path();
+        let todo_desc = "test_save_data";
+        {
+            let mut app1 = ToDoList::initial_app(file_path);
+            app1.add_task(todo_desc);
+        }
+        let mut app2 = ToDoList::initial_app(file_path);
+        app2.show_task_list();
+        let task = app2.find_task_by_desc(todo_desc);
+        assert!(task.is_some());
+        assert!(task.unwrap().desc.eq(todo_desc));
+    }
+
 }
 
 fn main() {
     let mut app = ToDoList::initial_app(FILE_PATH);
-    let no = app.add_task("test");
-    println!("no: {}", no.unwrap());
-    println!("{}", app);
-    println!("Hello, world!");
+    let mut input = String::new();
+    loop {
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
+        let input = input.trim_end();
+        println!("{}", input);
+    }
 }
