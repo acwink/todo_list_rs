@@ -129,7 +129,7 @@ impl ToDoList {
     }
 
     fn update_task_status(&mut self, no: u32, status: TaskStatus) -> bool {
-        let mut task = self.task_list.iter_mut().find(|task| task.no == no);
+        let task = self.task_list.iter_mut().find(|task| task.no == no);
         match task {
             Some(task) => {
                 task.status = status;
@@ -140,7 +140,7 @@ impl ToDoList {
     }
 
     fn delete_task(&mut self, no: u32) -> bool {
-        let res = self.task_list.iter().enumerate().find(|(index, task)| task.no == no);
+        let res = self.task_list.iter().enumerate().find(|(_, task)| task.no == no);
         if let Some((index, _)) = res {
             self.task_list.remove(index);
             true
