@@ -1,9 +1,11 @@
+use std::path::Path;
 use std::str::FromStr;
 use std::fs::File;
 use std::io::Read;
 use std::fmt::{self};
 use std::num::ParseIntError;
 use std::convert::From;
+use tempfile::NamedTempFile;
 
 const FILE_PATH: &str = "D:\\Program\\to_do_list_rs\\data.txt";
 // todo：模块化该代码，并只暴露出TodoList结构, 使用crate尝试吧，先把整体的逻辑搭建起来
@@ -96,7 +98,7 @@ struct ToDoList {
 }
 
 impl ToDoList {
-    fn initial_app(file_path: &str) -> Self {
+    fn initial_app<T: AsRef<Path>>(file_path: T) -> Self {
         let mut task_list: Vec<Task> = Vec::new();
         // 通过filepath找到指定的数据文件, 然后将其添加进todoList
         let mut file = File::open(file_path).unwrap();
@@ -164,14 +166,18 @@ impl fmt::Display for ToDoList {
 
 #[test]
 fn test_add_task() {
-    let mut app = ToDoList::initial_app(FILE_PATH);
+    let temp_file = NamedTempFile::new().unwrap();
+    let file_path = temp_file.path();
+    let mut app = ToDoList::initial_app(file_path);
     let no = app.add_task("test");
     assert!(no.is_ok());
 }
 
 #[test]
 fn test_update_task() {
-    let mut app = ToDoList::initial_app(FILE_PATH);
+    let temp_file = NamedTempFile::new().unwrap();
+    let file_path = temp_file.path();
+    let mut app = ToDoList::initial_app(file_path);
     let no = app.add_task("test_update_task");
     assert!(no.is_ok());
     let res = app.update_task_status(no.unwrap(), TaskStatus::Processing);
@@ -179,13 +185,17 @@ fn test_update_task() {
 }
 #[test]
 fn test_show_task_list() {
-    let app = ToDoList::initial_app(FILE_PATH);
+    let temp_file = NamedTempFile::new().unwrap();
+    let file_path = temp_file.path();
+    let app = ToDoList::initial_app(file_path);
     app.show_task_list();
 }
 
 #[test]
 fn test_delete_task() {
-    let mut app = ToDoList::initial_app(FILE_PATH);
+    let temp_file = NamedTempFile::new().unwrap();
+    let file_path = temp_file.path();
+    let mut app = ToDoList::initial_app(file_path);
     let no = app.add_task("test delete");
     assert!(no.is_ok());
     assert!(app.delete_task(no.unwrap()));
