@@ -74,6 +74,12 @@ impl ToDoList {
   pub fn show_task_list(&self) {
       println!("{}", self);
   }
+
+  pub fn show_task_by_status(&self, status: TaskStatus) {
+    let list = self.task_list.iter().filter(|task| task.status == status);
+    println!("{:<20}{:<30}{:<20}", "no", "desc", "status");
+    list.for_each(|task| println!("{}", task));
+  }
 }
 
 impl fmt::Display for ToDoList {
@@ -90,7 +96,8 @@ impl Drop for ToDoList {
       match File::create(FILE_PATH) {
           Ok(mut f) => {
               for ele in &self.task_list {
-                  let _ = writeln!(f, "{},{},{}", ele.no, ele.desc, ele.status); 
+                  let status: &str = ele.status.into();
+                  let _ = writeln!(f, "{},{},{}", ele.no, ele.desc, status); 
               }
           },
           Err(_) => {

@@ -17,6 +17,7 @@ impl From<ParseIntError> for ParseTaskError {
     }
 }
 
+#[derive(Clone)]
 pub struct Task {
   pub no: u32,
   pub desc: String,
@@ -49,6 +50,7 @@ impl FromStr for Task {
   }
 }
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum TaskStatus {
   Pending,
   Processing,
@@ -70,8 +72,8 @@ impl From<TaskStatus> for &str {
   fn from(value: TaskStatus) -> Self {
       match value {
           TaskStatus::Pending => "0",
-          TaskStatus::Completed => "1",
-          TaskStatus::Processing => "2",
+          TaskStatus::Processing => "1",
+          TaskStatus::Completed => "2",
       }
   }
 }

@@ -37,7 +37,8 @@ fn main() {
       Arg::new("show")
         .long("show")
         .short('s')
-        .num_args(0)
+        .num_args(0..2)
+        .value_parser(["0", "1", "2"])
         .help("Show all your tasks.")
     )
     .get_matches();
@@ -57,7 +58,11 @@ fn main() {
         app.show_task_list();
       },
       "show" => {
-        app.show_task_list();
+        if let Some(status) = match_result.get_one::<String>("show") {
+          app.show_task_by_status(TaskStatus::from(status.as_str()));
+        } else {
+          app.show_task_list();
+        }
       },
       "update" => {
         let tuple = match_result.get_many::<String>("update").unwrap_or_default().map(|v| v.as_str()).collect::<Vec<_>>();
