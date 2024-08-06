@@ -1,11 +1,10 @@
 use std::path::Path;
-use std::str::FromStr;
 use std::fs::File;
-use std::io::{Read, Take, Write};
+use std::io::{Read, Write};
 use std::fmt::{self};
 use std::num::ParseIntError;
 use std::convert::From;
-use std::io;
+use std::str::FromStr;
 
 const FILE_PATH: &str = "data.txt";
 // todo：模块化该代码，并只暴露出TodoList结构, 使用crate尝试吧，先把整体的逻辑搭建起来
@@ -122,7 +121,6 @@ impl ToDoList {
             None => 1u32,  
         };
         let s = format!("{},{},{}", no, desc, TaskStatus::Pending);
-        println!("{}", s);
         let task = Task::from_str(&s)?;
         self.task_list.push(task);
         Ok(no)
@@ -170,7 +168,6 @@ impl fmt::Display for ToDoList {
 // todo：开一个线程定时去保存数据
 impl Drop for ToDoList {
     fn drop(&mut self) {
-        println!("drop todoList");
         match File::create(FILE_PATH) {
             Ok(mut f) => {
                 for ele in &self.task_list {
@@ -236,9 +233,9 @@ mod test_app {
         let todo_desc = "test_save_data";
         {
             let mut app1 = ToDoList::initial_app(file_path);
-            app1.add_task(todo_desc);
+            let _ = app1.add_task(todo_desc);
         }
-        let mut app2 = ToDoList::initial_app(file_path);
+        let app2 = ToDoList::initial_app(file_path);
         app2.show_task_list();
         let task = app2.find_task_by_desc(todo_desc);
         assert!(task.is_some());
@@ -247,14 +244,70 @@ mod test_app {
 
 }
 
+use clap::{command, Arg, ArgAction};
+const TodoCommand: [&str; 4] = ["add", "delete", "update", "show"];
 fn main() {
-    let mut app = ToDoList::initial_app(FILE_PATH);
-    let mut input = String::new();
-    loop {
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Failed to read line");
-        let input = input.trim_end();
-        println!("{}", input);
+  let match_result = command!()
+    .arg(
+      Arg::new("add")
+        .long("add")
+        .short('a')
+        .num_args(1)
+        .value_name("DESC")
+        .exclusive(true)
+        .help("Add a task.")
+    )
+    .arg(
+      Arg::new("update")
+        .long("update")
+        .short('u')
+        .action(ArgAction::Set)
+        .num_args(2)
+        .value_names(["NO", "STATUS"])
+        .exclusive(true)
+        .help("Update the task's status.")
+    )
+    .arg(
+      Arg::new("delete")
+        .long("delete")
+        .short('d')
+        .num_args(1)
+        .value_name("NO")
+        .exclusive(true)
+        .help("Delete a task by the task's NO.")
+    )
+    .arg(
+      Arg::new("show")
+        .long("show")
+        .short('s')
+        .num_args(0)
+        .help("Show all your tasks.")
+    )
+    .get_matches();
+
+  let mut app = ToDoList::initial_app(FILE_PATH);
+  let operation_option = TodoCommand.into_iter().find(|op| match_result.contains_id(op));
+  if let Some(op) = operation_option {
+    match op {
+      "add" => {
+        let desc = match_result.get_one::<String>("add").unwrap();
+        let _ = app.add_task(desc);
+      }
+      "delete" => {
+        let no = match_result.get_one::<u32>("delete").unwrap();
+        app.delete_task(no.clone());
+      },
+      "show" => {
+        app.show_task_list();
+      },
+      "update" => {
+        let tuple =  match_result.get_many::<&str>("delete").unwrap_or_default().collect::<Vec<_>>();
+        let no = tuple.get(0).unwrap().parse::<u32>().unwrap();
+        let status = tuple.get(1).unwrap();
+        app.update_task_status(no, TaskStatus::from(**status));
+      },
+      _ => todo!(),
     }
+  }
+  
 }
