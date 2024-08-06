@@ -245,7 +245,7 @@ mod test_app {
 }
 
 use clap::{command, Arg, ArgAction};
-const TodoCommand: [&str; 4] = ["add", "delete", "update", "show"];
+const TODO_COMMAND: [&str; 4] = ["add", "delete", "update", "show"];
 fn main() {
   let match_result = command!()
     .arg(
@@ -286,7 +286,7 @@ fn main() {
     .get_matches();
 
   let mut app = ToDoList::initial_app(FILE_PATH);
-  let operation_option = TodoCommand.into_iter().find(|op| match_result.contains_id(op));
+  let operation_option = TODO_COMMAND.into_iter().find(|op| match_result.contains_id(op));
   if let Some(op) = operation_option {
     match op {
       "add" => {
