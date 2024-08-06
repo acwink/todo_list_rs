@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test_app {
-    use to_do_list_rs::app_core::{ToDoList, TaskStatus};
+    use todo::app_core::{ToDoList, TaskStatus};
     use tempfile::NamedTempFile;
 
     #[test]

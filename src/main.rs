@@ -1,5 +1,5 @@
 
-use to_do_list_rs::app_core::{initial_app, TaskStatus};
+use todo::app_core::{initial_app, TaskStatus};
 use clap::{command, Arg, ArgAction};
 
 const TODO_COMMAND: [&str; 4] = ["add", "delete", "update", "show"];
