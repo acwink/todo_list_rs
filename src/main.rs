@@ -1,5 +1,5 @@
 
-use to_do_list_rs::app_core::{ToDoList, TaskStatus};
+use to_do_list_rs::app_core::{initial_app, TaskStatus};
 use clap::{command, Arg, ArgAction};
 
 const TODO_COMMAND: [&str; 4] = ["add", "delete", "update", "show"];
@@ -42,7 +42,7 @@ fn main() {
     )
     .get_matches();
 
-  let mut app = ToDoList::initial_app();
+  let mut app = initial_app();
   let operation_option = TODO_COMMAND.into_iter().find(|op| match_result.contains_id(op));
   if let Some(op) = operation_option {
     match op {
