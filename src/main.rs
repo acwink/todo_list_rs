@@ -290,24 +290,28 @@ fn main() {
   if let Some(op) = operation_option {
     match op {
       "add" => {
-        let desc = match_result.get_one::<String>("add").unwrap();
+        let desc = match_result.get_one::<String>("add").expect("Except that the NO is an unsigned number");
         let _ = app.add_task(desc);
+        app.show_task_list();
       }
       "delete" => {
-        let no = match_result.get_one::<u32>("delete").unwrap();
-        app.delete_task(no.clone());
+        let no = match_result.get_one::<String>("delete").unwrap();
+        app.delete_task(no.parse::<u32>().expect("Except that the NO is an unsigned number"));
+        app.show_task_list();
       },
       "show" => {
         app.show_task_list();
       },
       "update" => {
-        let tuple =  match_result.get_many::<&str>("delete").unwrap_or_default().collect::<Vec<_>>();
-        let no = tuple.get(0).unwrap().parse::<u32>().unwrap();
+        let tuple = match_result.get_many::<String>("update").unwrap_or_default().map(|v| v.as_str()).collect::<Vec<_>>();
+        let no = tuple.get(0).expect("Except that the NO is an unsigned number").parse::<u32>().unwrap();
         let status = tuple.get(1).unwrap();
-        app.update_task_status(no, TaskStatus::from(**status));
+        app.update_task_status(no, TaskStatus::from(*status));
+        app.show_task_list();
       },
       _ => todo!(),
     }
+    
   }
   
 }
