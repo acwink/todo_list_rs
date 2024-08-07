@@ -15,7 +15,12 @@ impl ToDoList {
   pub fn initial_app_by_path<T: AsRef<Path>>(file_path: T) -> Self {
       let mut task_list: Vec<Task> = Vec::new();
       // 通过filepath找到指定的数据文件, 然后将其添加进todoList
-      let mut file = File::open(file_path).unwrap();
+       // 尝试打开文件，如果文件不存在则创建一个新文件
+      let mut file = File::options()
+        .read(true) // 允许读取
+        .write(true) // 允许写入
+        .create(true) // 如果文件不存在则创建
+        .open(file_path).unwrap();
       let mut tasks_data = String::new();
       // 把文件内容读入到buffer
       let _ = file.read_to_string(&mut tasks_data);
